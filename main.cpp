@@ -8,13 +8,13 @@ using namespace std;
 
 int intro();
 void startPlayerVsPlayer();
-void printDashboard(string *, char *);
+void printDashboard(string *, char *, int, int*);
 string *askPlayerNames();
 int evaluateEndConditions(char *);
-void newMovement(char *, int, string *);
+void newMovement(char *, int,int, string *);
 bool checkValidInt(int, int *, int);
 bool checkValidPosition(int,char*);
-
+int swapStartPlayer(int);
 int main()
 {
 
@@ -55,16 +55,24 @@ void startPlayerVsPlayer()
 
     string *names = askPlayerNames();
     char dashboard[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    int player1_player2_draw[3] = {0};
     int player = 0;
+    int startPlayer = 0;
     int player1Win, player2Win, draw;
     int result;
-    //while (true)
-    //{
-    cout<<"****"<<endl;
+    string playAgain;
+    
+    while(true){
+        for (int i = 0; i < 9; i++)
+        {
+            dashboard[i] = ' ';
+        }
+        cout<<names[startPlayer]<<" starts!"<<endl;
+        player = startPlayer;
         do
         {
-            printDashboard(names, dashboard);
-            newMovement(dashboard, player, names);
+            printDashboard(names, dashboard, startPlayer, player1_player2_draw);
+            newMovement(dashboard, startPlayer, player, names);
             player = (player + 1) % 2;
             system("clear");
             result = evaluateEndConditions(dashboard);
@@ -73,16 +81,16 @@ void startPlayerVsPlayer()
         switch (result)
         {
         case 0:
-            cout << "Player 1 won (" << names[0] << ")!";
-            player1Win++;
+            cout << "Player 1 won (" << names[startPlayer] << ")!"<<endl;
+            player1_player2_draw[startPlayer]++;
             break;
         case 1:
-            cout << "Player 2 won (" << names[1] << ")!";
-            player2Win++;
+            cout << "Player 2 won (" << names[startPlayer] << ")!"<<endl;
+            player1_player2_draw[startPlayer]++;
             break;
         case 2:
             cout << "It has been a draw!" << endl;
-            draw++;
+            player1_player2_draw[2]++;
             break;
         default:
             cout << "Something bad has happened!" << endl;
@@ -92,15 +100,41 @@ void startPlayerVsPlayer()
         {
             *(dashboard + i) = ' ';
         }
-    //}
+    
+        while(true){
+            cout<<"Do you want to play again? (y/ n): ";
+            getline(cin,playAgain,'\n');
+            if(playAgain != "y" && playAgain != "Y" && playAgain != "n" && playAgain != "N"){
+                cout<<"Choose a correct option!"<<endl;
+                continue;
+            }
+            break;
+        }
+        if(playAgain == "n" || playAgain == "N"){
+            return;
+        }else{
+            startPlayer = swapStartPlayer(startPlayer);
+            cout<<"The new startPlayer is "<<names[startPlayer]<<endl;
+            continue;
+        }
+    }
 
     delete[] names;
 }
 
-void newMovement(char *dashboard, int player, string *names)
+int swapStartPlayer(int startPlayer){
+    if(startPlayer == 0) {
+        return 1;
+    }else{
+        return 0;
+    }
+    
+}
+
+void newMovement(char *dashboard, int startPlayer, int player, string *names)
 {
     char sym;
-    if (player == 0)
+    if (startPlayer == player)
     {
         sym = 'x';
     }
@@ -112,6 +146,7 @@ void newMovement(char *dashboard, int player, string *names)
     string opt;
     int fDigit;
     int digitValidOptions[9] = {1,2,3,4,5,6,7,8,9};
+    
     while(true) {
         cout << "Player " << player + 1 << " (" << *(names + player) << "). Choose an option: ";
         std::getline(cin, opt, '\n');
@@ -194,13 +229,24 @@ int evaluateEndConditions(char *dashboard)
 
     return 2;
 }
-void printDashboard(string *names, char *dasbhoard)
+void printDashboard(string *names, char *dasbhoard, int startPlayer, int * player1_player2_draw)
 {
 
-    cout << "Player 1 "
-         << "(" << *names << "): [x]" << endl;
-    cout << "Player 1 "
-         << "(" << *(names + 1) << "): [o]" << endl;
+    if(startPlayer == 0){
+        cout << "Player 1 "
+            << "(" << *names << "): [x]" << endl;
+        cout << "Player 2 "
+            << "(" << *(names + 1) << "): [o]" << endl;
+    }else{
+        cout << "Player 1 "
+            << "(" << *(names + 1) << "): [x]" << endl;
+        cout << "Player 2 "
+            << "(" << *names << "): [o]" << endl;
+    }
+    cout<<endl<<endl<<endl;
+    
+    cout<<"RESULT"<<endl<<endl<<endl<<endl;
+    cout<<names[0]+" win: "<<player1_player2_draw[0]<<"            "+ names[1]+" win: "<<player1_player2_draw[1]<<"               draws: "<<player1_player2_draw[2]<<endl; 
     cout << "-------------                       -------------" << endl;
     cout << "| 1 | 2 | 3 |                       | " << dasbhoard[0] << " | " << dasbhoard[1] << " | " << dasbhoard[2] << " |" << endl;
     cout << "-------------                       -------------" << endl;
