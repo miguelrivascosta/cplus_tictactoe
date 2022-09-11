@@ -13,6 +13,7 @@ string *askPlayerNames();
 int evaluateEndConditions(char *);
 void newMovement(char *, int, string *);
 bool checkValidInt(int, int *, int);
+bool checkValidPosition(int,char*);
 
 int main()
 {
@@ -129,8 +130,12 @@ void newMovement(char *dashboard, int player, string *names)
             }
             else
             {
-                fDigit = digit;
-                break;
+                if(!checkValidPosition(digit,dashboard)){
+                    cout<<"Error. This position is invalid!"<<endl;
+                }else{
+                    fDigit = digit;
+                    break;
+                }
             }
         }
     }
@@ -248,6 +253,13 @@ bool checkValidInt(int digit, int * validOptions,int sizeValidOptions)
         if(*(validOptions+i) == digit){
             return true;
         }
+    }
+    return false;
+}
+
+bool checkValidPosition(int digit, char * dashboard){
+    if(*(dashboard+digit-1)== ' '){
+        return true;
     }
     return false;
 }
