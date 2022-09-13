@@ -15,6 +15,14 @@ void newMovement(char *, int,int, string *);
 bool checkValidInt(int, int *, int);
 bool checkValidPosition(int,char*);
 int swapStartPlayer(int);
+
+
+// Functions to minmax
+int minmax();
+bool checkFinal(char *, char);
+bool checkDraw(char *);
+char * emptyCells(char *);
+
 int main()
 {
 
@@ -308,4 +316,59 @@ bool checkValidPosition(int digit, char * dashboard){
         return true;
     }
     return false;
+}
+
+
+char * emptyCells(char * dashboard){
+    int ctd = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            ctd++;
+        }
+    }
+    char * arrayEmptyCells = new char[ctd];
+
+    ctd = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            arrayEmptyCells[ctd++] = i;
+        }
+    }
+}
+
+bool checkFinal(char * dashboard,char sym){
+    if (dashboard[0] == sym && dashboard[1] == sym && dashboard[2] == sym || dashboard[3] == sym && dashboard[4] == sym && dashboard[5] == sym || dashboard[6] == sym && dashboard[7] == sym && dashboard[8] == sym)
+    {
+        return true;
+    }
+
+    if (dashboard[0] == sym && dashboard[3] ==  sym && dashboard[6] == sym || dashboard[1] == sym && dashboard[4] == sym && dashboard[7] == sym || dashboard[2] == sym && dashboard[5] == sym && dashboard[8] == sym)
+    {
+        return true;
+    }
+
+    // Diagonal lines x
+    if (dashboard[0] == sym && dashboard[4] == sym && dashboard[8] == sym || dashboard[2] == sym && dashboard[4] == sym && dashboard[6] == sym)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool checkDraw(char * dashboard){
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            return false;
+        }
+    }
+    return true;
+}
+
+int minmax(char * dashboard, bool player){
+    // player == 0 => IA (max)
+    // player == 1 => Human (min)
 }
