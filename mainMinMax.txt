@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 void newMovement(char *, char);
-int minmax(char *, bool);
+int minmax(char *, bool, bool, char);
 bool checkWinner(char *, char);
 bool checkDraw(char *);
 int * emptyCells(char *, int);
@@ -26,42 +26,21 @@ int main() {
     //int nEmptyCells = countEmptyCells(dashboard);
 
     int startPlayer = 0, actualPlayer = 0;
-
+    int newPosition;
     char sym[2] = {'x','o'};
-
-    int nEmptyCells;
-    int * arrayEmptyCells;
     
     dashboard[rand()%10] = 'x';
     actualPlayer++;
+
     do{
         std::cout<<"****"<<std::endl;
         printDashboard(dashboard);
         std::cout<<"****"<<std::endl;
         if(actualPlayer == 0){
+            dashboard[minmax(dashboard,true,true,'x')] = 'x';
+
             
             
-            //newMovement(dashboard,sym[actualPlayer]);
-            nEmptyCells = countEmptyCells(dashboard);
-            arrayEmptyCells = emptyCells(dashboard,nEmptyCells);
-            int bestValue = -1;
-            int newPosition;
-            for (int i = 0; i < nEmptyCells; i++)
-            {
-                char * newDashboard = new char[9];
-                copyArrays(newDashboard,dashboard);
-                newDashboard[arrayEmptyCells[i]] = 'x';
-                int newValue = minmax(newDashboard,false);
-                if(newValue>bestValue){
-                    newPosition = arrayEmptyCells[i];
-                }
-                
-                //std::cout<<arrayEmptyCells[i]<<std::endl;
-                delete [] newDashboard;
-                
-            }
-            dashboard[newPosition] = 'x';
-            delete [] arrayEmptyCells;
         }else{
             int position;
             std::cout<<"Choose a position: ";
@@ -195,7 +174,33 @@ int min(int a, int b){
         return b;
     }
 }
-int minmax(char * dashboard, bool isMaximizing){
+int minmax(char * dashboard, bool isMaximizing, bool isRootNode, char sym){
+
+    if(isRootNode){
+            int nEmptyCells;
+            int * arrayEmptyCells;
+           //newMovement(dashboard,sym[actualPlayer]);
+            nEmptyCells = countEmptyCells(dashboard);
+            arrayEmptyCells = emptyCells(dashboard,nEmptyCells);
+            int bestValue = -1;
+            int newPosition;
+            for (int i = 0; i < nEmptyCells; i++)
+            {
+                char * newDashboard = new char[9];
+                copyArrays(newDashboard,dashboard);
+                newDashboard[arrayEmptyCells[i]] = sym;
+                int newValue = minmax(newDashboard,false,!isMaximizing,sym);
+                if(newValue>bestValue){
+                    newPosition = arrayEmptyCells[i];
+                }
+                
+                //std::cout<<arrayEmptyCells[i]<<std::endl;
+                delete [] newDashboard;
+                
+            }
+            delete [] arrayEmptyCells;
+            return newPosition;
+    }
     printDashboard(dashboard);
     
     if(checkWinner(dashboard,'x')){
@@ -216,7 +221,7 @@ int minmax(char * dashboard, bool isMaximizing){
             char * newDashboard = new char[9];
             copyArrays(newDashboard,dashboard);
             newDashboard[arrayEmptyCells[i]] = 'x';
-            int newValue = minmax(newDashboard,!isMaximizing);
+            int newValue = minmax(newDashboard,!isMaximizing,false,sym);
             if(newValue>bestVal){
                 newPosition = arrayEmptyCells[i];
                 bestVal = newValue;
@@ -234,7 +239,7 @@ int minmax(char * dashboard, bool isMaximizing){
             char * newDashboard = new char[9];
             copyArrays(newDashboard,dashboard);
             newDashboard[arrayEmptyCells[i]] = 'o';
-            int newValue = minmax(newDashboard,!isMaximizing);
+            int newValue = minmax(newDashboard,!isMaximizing,false,sym);
             if(newValue<bestVal){
                 newPosition = arrayEmptyCells[i];
                 bestVal = newValue;
