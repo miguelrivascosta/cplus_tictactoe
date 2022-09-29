@@ -7,15 +7,18 @@ int intro();
 bool checkIntroOption(string);
 void runOption(int);
 bool checkStringValidValues(string, string *,int);
-bool checkNewMove(string, char *);
+string checkNewMove(string, char *);
 void playerVsPlayer();
 void playerVsIA();
 void printDashboard(string *, char *, int , int *);
-
+string checkEndConditions(char *, string, char);
+bool checkWinner(char *, char);
+bool checkDraw(char *);
+void updateScores(char *, int *);
+void inicializeDashboard(char*);
+bool checkPlayAgainOption(string);
 int main() {
     runOption(intro());
-
-
     return 0;
 }
 
@@ -37,11 +40,12 @@ void runOption(int introOption){
     }
 }
 
+
 void playerVsPlayer() {
     string players[2];
     char symbols[2] = {'x','o'};
     char dashboard[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
-    int score[3] = {0,0,0};
+    int scores[3] = {0,0,0};
     /*
     cout<<"Write name of first player: ";
     getline(cin, players[0], '\n');
@@ -52,22 +56,92 @@ void playerVsPlayer() {
     players[0] = "miguel";
     players[1] = "carlos";
 
+    int startPlayer = 0;
     int actualPlayer = 0;
     string newMove;
+    string mssg;
     while(true){
-        system("clear");
-        printDashboard(players,dashboard,actualPlayer,score);
-        getline(cin,newMove,'\n');
-        if(checkNewMove(newMove, dashboard)){
-            dashboard[stoi(newMove)-1] = symbols[actualPlayer];
-            actualPlayer = (actualPlayer+1)%2;
-        }else{
-            continue;
+        mssg = "";
+        while(true){
+            system("clear");
+
+            if(mssg != ""){
+                cout<<mssg<<endl;
+            }
+
+            printDashboard(players,dashboard,actualPlayer,scores);
+            getline(cin,newMove,'\n');
+            mssg = checkNewMove(newMove, dashboard);
+
+            if(mssg == ""){
+                dashboard[stoi(newMove)-1] = symbols[actualPlayer];  
+            }else{
+                continue;
+            }
+
+            mssg = checkEndConditions(dashboard, players[actualPlayer], symbols[actualPlayer]);
+            
+            if(mssg == ""){
+                actualPlayer = (actualPlayer+1)%2;
+                continue;
+            }else{
+                cout<<mssg<<endl<<endl;
+                break;
+            }
         }
+        
+        updateScores(dashboard,scores);
+        inicializeDashboard(dashboard);
+
+        string playAgainOption;
+
+        while(true){
+            cout<<"Do you want to play again? (y/n): ";
+            getline(cin, playAgainOption, '\n');
 
 
+            if(!checkPlayAgainOption(playAgainOption)){
+                cout<<"Choose a correct option!";
+            }else{
+                if(playAgainOption == "n"){
+                    return;
+                }else{
+                    startPlayer = (startPlayer+1)%2;
+                    actualPlayer = startPlayer;
+                    break;
+                }
+            }
+        }
+    }
+    
+
+}
+
+bool checkPlayAgainOption(string playAgainOption){
+
+    if(playAgainOption != "y" && playAgainOption != "n"){
+        return false;
+    }else{
+        return true;
     }
 
+}
+void inicializeDashboard(char * dashboard){
+    for (int i = 0; i < 9; i++)
+    {
+        dashboard[i] = ' ';
+    }
+    
+}
+
+void updateScores(char * dashboard, int * scores){
+    if(checkDraw(dashboard)){
+        scores[2]++;
+    }else if(checkWinner(dashboard,'x')){
+        scores[0]++;
+    }else{
+        scores[1]++;
+    }
 }
 
 void playerVsIA() {
@@ -90,7 +164,6 @@ int intro(){
         }else{
             continue;
         }
-        
     }
 }
 
@@ -107,23 +180,23 @@ bool checkIntroOption(string introOption){
     return true;
 }
 
-bool checkNewMove(string newMove, char * dashboard){
+string checkNewMove(string newMove, char * dashboard){
     int sizeValidInputValues = 9;
     string validInputValues[sizeValidInputValues] = {"1","2","3","4","5","6","7","8","9"};
+    string mssg = "";
     if(newMove.length() > 1){
-        cout<<"You have chosen an invalid value, it has more than 1 character!"<<endl;
-        return false;
+        return "You have chosen an invalid value, it has more than 1 character!";
     }
     if(!checkStringValidValues(newMove,validInputValues,sizeValidInputValues)){
-        cout<<"You have chosen an invalid character, it should be x or o!"<<endl;
-        return false;
+        return "You have chosen an invalid character, it should be x or o!";
+        
     }
 
     if(dashboard[stoi(newMove)-1] != ' '){
-        cout<<"There are already a symbol in this place!"<<endl;
-        return false;
+        return "There are already a symbol in this place!";
+        
     }
-    return true;
+    return "";
 }
 bool checkStringValidValues(string value,string * validValues, int size){
 
@@ -157,4 +230,45 @@ void printDashboard(string *names, char *dasbhoard, int startPlayer, int * playe
     cout << "-------------                       -------------" << endl;
     cout << "| 7 | 8 | 9 |                       | " << dasbhoard[6] << " | " << dasbhoard[7] << " | " << dasbhoard[8] << " |" << endl;
     cout << "-------------                       -------------" << endl;
+}
+
+string checkEndConditions(char * dashboard, string name, char sym){
+
+        if(checkWinner(dashboard,sym)){
+            return name+" won!";
+        } else if(checkDraw(dashboard)){
+            return "It was a draw";
+        } else{
+            return "";
+        }
+}
+
+bool checkWinner(char * dashboard,char sym){
+    if ( (dashboard[0] == sym) && (dashboard[1] == sym) && (dashboard[2] == sym) || (dashboard[3] == sym) && (dashboard[4] == sym) && (dashboard[5] == sym) || (dashboard[6] == sym) && (dashboard[7] == sym) && (dashboard[8] == sym))
+    {
+        return true;
+    }
+
+    if (dashboard[0] == sym && dashboard[3] ==  sym && dashboard[6] == sym || dashboard[1] == sym && dashboard[4] == sym && dashboard[7] == sym || dashboard[2] == sym && dashboard[5] == sym && dashboard[8] == sym)
+    {
+        return true;
+    }
+
+    // Diagonal lines x
+    if (dashboard[0] == sym && dashboard[4] == sym && dashboard[8] == sym || dashboard[2] == sym && dashboard[4] == sym && dashboard[6] == sym)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool checkDraw(char * dashboard){
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            return false;
+        }
+    }
+    return true;
 }
