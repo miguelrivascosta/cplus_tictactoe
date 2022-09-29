@@ -5,7 +5,6 @@ using namespace std;
 
 int intro();
 bool checkIntroOption(string);
-void runOption(int);
 bool checkStringValidValues(string, string *,int);
 string checkNewMove(string, char *);
 void playerVsPlayer();
@@ -17,42 +16,46 @@ bool checkDraw(char *);
 void updateScores(char *, int *);
 void inicializeDashboard(char*);
 bool checkPlayAgainOption(string);
+int minmax(char *, bool, bool, char);
+void copyArrays(char *, char *);
+int * emptyCells(char *, int);
+int countEmptyCells(char *);
+
 int main() {
-    runOption(intro());
-    return 0;
-}
 
+    while(true){
+        int introOption = intro();
 
-void runOption(int introOption){
-    switch (introOption)
-    {
-    case 1:
-        playerVsPlayer();
-        break;
-    case 2:
-        playerVsIA();
-        break;
-    case 0:
-        cout<<"Goodbye!"<<endl;
-        break;
-    default:
-        break;
+        switch (introOption)
+        {
+        case 1:
+            playerVsPlayer();
+            break;
+        case 2:
+            playerVsIA();
+            break;
+        case 0:
+            cout<<"Goodbye"<<endl;
+            return 0;
+        default:
+            break;
+        }
     }
+    
 }
-
 
 void playerVsPlayer() {
     string players[2];
     char symbols[2] = {'x','o'};
     char dashboard[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
     int scores[3] = {0,0,0};
-    /*
+    
     cout<<"Write name of first player: ";
     getline(cin, players[0], '\n');
     
     cout<<"Write name of second player: ";
     getline(cin, players[1],'\n');
-    */
+    
     players[0] = "miguel";
     players[1] = "carlos";
 
@@ -145,7 +148,76 @@ void updateScores(char * dashboard, int * scores){
 }
 
 void playerVsIA() {
+    string players[2];
+    players[1] = "IA";
+    players[0] = "miguel";
+    cout<<"Write name of first player: ";
+    getline(cin, players[0], '\n');
 
+    int startPlayer = 0;
+    int actualPlayer = 0;
+    int scores[3] = {0,0,0};
+    string mssg;
+    char dashboard[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    char symbols[2] = {'x','o'};
+    string newMove;
+    while(true){
+        mssg = "";
+        while(true){
+            system("clear");
+
+            if(mssg != ""){
+                cout<<mssg<<endl;
+            }
+
+            printDashboard(players,dashboard,actualPlayer,scores);
+
+            if(actualPlayer == 0){
+                getline(cin,newMove,'\n');
+                mssg = checkNewMove(newMove, dashboard);
+                if(mssg == ""){
+                    dashboard[stoi(newMove)-1] = symbols[actualPlayer];  
+                }else{
+                    continue;
+                }
+            }else{
+                dashboard[minmax(dashboard,true,true,symbols[actualPlayer])] = symbols[actualPlayer];
+            }
+
+            mssg = checkEndConditions(dashboard, players[actualPlayer], symbols[actualPlayer]);
+            
+            if(mssg == ""){
+                actualPlayer = (actualPlayer+1)%2;
+                continue;
+            }else{
+                cout<<mssg<<endl<<endl;
+                break;
+            }
+        }
+        
+        updateScores(dashboard,scores);
+        inicializeDashboard(dashboard);
+
+        string playAgainOption;
+
+        while(true){
+            cout<<"Do you want to play again? (y/n): ";
+            getline(cin, playAgainOption, '\n');
+
+
+            if(!checkPlayAgainOption(playAgainOption)){
+                cout<<"Choose a correct option!";
+            }else{
+                if(playAgainOption == "n"){
+                    return;
+                }else{
+                    startPlayer = (startPlayer+1)%2;
+                    actualPlayer = startPlayer;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 int intro(){
@@ -156,8 +228,7 @@ int intro(){
         cout<<"2. Player vs IA"<<endl;
         cout<<"0. Exit"<<endl;
         cout<<"CHOOSE AN OPTION: ";
-        //getline(cin, introOption, '\n');
-        introOption="1";
+        getline(cin, introOption, '\n');
         if(checkIntroOption(introOption)){
             cout<<"You have chosen: "<<introOption<<endl;
             return stoi(introOption);
@@ -271,4 +342,116 @@ bool checkDraw(char * dashboard){
         }
     }
     return true;
+}
+
+int minmax(char * dashboard, bool isMaximizing, bool isRootNode, char sym){
+
+    if(isRootNode){
+            int nEmptyCells;
+            int * arrayEmptyCells;
+           //newMovement(dashboard,sym[actualPlayer]);
+            nEmptyCells = countEmptyCells(dashboard);
+            arrayEmptyCells = emptyCells(dashboard,nEmptyCells);
+            int bestValue = -1;
+            int newPosition;
+            for (int i = 0; i < nEmptyCells; i++)
+            {
+                char * newDashboard = new char[9];
+                copyArrays(newDashboard,dashboard);
+                newDashboard[arrayEmptyCells[i]] = sym;
+                int newValue = minmax(newDashboard,false,!isMaximizing,sym);
+                if(newValue>bestValue){
+                    newPosition = arrayEmptyCells[i];
+                }
+                
+                //std::cout<<arrayEmptyCells[i]<<std::endl;
+                delete [] newDashboard;
+                
+            }
+            delete [] arrayEmptyCells;
+            return newPosition;
+    }
+    
+    if(checkWinner(dashboard,'o')){
+        return 1;
+    } else if(checkWinner(dashboard,'x')) {
+        return -1;
+    } else if(checkDraw(dashboard)){
+        return 0;
+    }
+
+    int nEmptyCells = countEmptyCells(dashboard);
+    int * arrayEmptyCells = emptyCells(dashboard,nEmptyCells);
+    if(isMaximizing){
+        int bestVal = -1;
+        int newPosition;
+        for (int i = 0; i < nEmptyCells; i++)
+        {
+            char * newDashboard = new char[9];
+            copyArrays(newDashboard,dashboard);
+            newDashboard[arrayEmptyCells[i]] = 'o';
+            int newValue = minmax(newDashboard,!isMaximizing,false,sym);
+            if(newValue>bestVal){
+                newPosition = arrayEmptyCells[i];
+                bestVal = newValue;
+            }
+            //bestVal = max(bestVal,value);
+            delete [] newDashboard;
+        }
+        delete [] arrayEmptyCells;
+        return bestVal;
+    }else{
+        int bestVal = +1;
+        int newPosition;
+        for (int i = 0; i < nEmptyCells; i++)
+        {
+            char * newDashboard = new char[9];
+            copyArrays(newDashboard,dashboard);
+            newDashboard[arrayEmptyCells[i]] = 'x';
+            int newValue = minmax(newDashboard,!isMaximizing,false,sym);
+            if(newValue<bestVal){
+                newPosition = arrayEmptyCells[i];
+                bestVal = newValue;
+            }
+            //bestVal = min(bestVal,value);
+            delete [] newDashboard;
+        }
+        delete [] arrayEmptyCells;
+        return bestVal;
+    }
+
+    delete [] arrayEmptyCells;
+    return 0;
+}
+
+void copyArrays(char * newDashboard, char * dashboard){
+    for (int i = 0; i < 9; i++)
+    {
+        newDashboard[i] = dashboard[i];
+    }
+    
+}
+
+int countEmptyCells(char * dashboard){
+    int ctd = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            ctd++;
+        }
+    }
+    return ctd;
+}
+
+int * emptyCells(char * dashboard, int nEmptyCells){
+    int ctd = 0;
+    int * arrayEmptyCells = new int[nEmptyCells];
+    for (int i = 0; i < 9; i++)
+    {
+        if(dashboard[i] == ' '){
+            arrayEmptyCells[ctd++] = i;
+        }
+    }
+
+    return arrayEmptyCells;
 }
